@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ממיר קישורי Google Drive לקישור ישיר</title>
     <!-- Load Tailwind CSS from CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Load Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Favicons and manifest (these can be replaced with your own assets) -->
@@ -17,144 +20,286 @@
     <!-- Inherit a generic logo as a fallback favicon -->
     <link rel="icon" type="image/png" href="https://newpipe.net/img/logo.svg">
     <style>
-        /* A colourful gradient background for the header */
-        .gradient-bg {
-            background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 100%);
+        :root {
+            color-scheme: light dark;
         }
-        /* Pulse animation used on the convert button */
-        .pulse {
-            animation: pulse 2s infinite;
+        body {
+            text-align: right;
+            font-family: 'Heebo', 'Assistant', 'Rubik', system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: linear-gradient(150deg, #f4f7fb 0%, #e9eff8 45%, #f3f6fb 100%);
+            color: #0f172a;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .glass-card {
+            backdrop-filter: blur(22px);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.75));
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
         }
-        /* Tooltip behaviour */
-        .tooltip { position: relative; }
-        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
-        .tooltip-text {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            right: 50%;
-            margin-right: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .accent-border {
+            position: relative;
         }
-        .tooltip-text::after {
+        .accent-border::before {
             content: "";
             position: absolute;
-            top: 100%;
-            right: 50%;
-            margin-right: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(140deg, rgba(59, 130, 246, 0.7), rgba(56, 189, 248, 0.6));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
         }
-        /* Loading spinner used during conversion */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+        .badge {
+            background: linear-gradient(130deg, rgba(59, 130, 246, 0.12), rgba(15, 118, 110, 0.15));
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        /* File metadata text styling */
-        .file-info-text { color: #333; font-weight: 500; }
-        /* Right-to-left adjustments for Hebrew */
-        body { text-align: right; }
-        .mr-3 { margin-right: 0 !important; margin-left: 0.75rem !important; }
-        .mr-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
-        .ml-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
-        .text-left { text-align: right !important; }
-        .text-right { text-align: left !important; }
+        .hero-card {
+            backdrop-filter: blur(18px);
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 24px 45px rgba(15, 23, 42, 0.08);
+        }
+        .soft-divider {
+            height: 1px;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.35), transparent);
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gray-100">
-    <!-- Page Header -->
-    <div class="gradient-bg text-white py-12 px-4">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                <i class="fab fa-google-drive ml-3"></i>
-                ממיר קישורי Google Drive
-            </h1>
-            <p class="text-xl md:text-2xl mb-8">
-                המר את קישורי Google Drive שלך לקישורי הורדה ישירים באופן מיידי
-            </p>
-            <!-- Conversion Card -->
-            <div class="bg-white rounded-lg shadow-xl p-6 max-w-3xl mx-auto">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <input type="text" id="driveLink" placeholder="הדבק את קישור Google Drive שלך כאן..." class="flex-grow px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-800">
-                    <button id="convertBtn" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-300 flex items-center justify-center pulse">
-                        <i class="fas fa-exchange-alt mr-2"></i>  ‌המר ‌ ‌
-                    </button>
-                </div>
-                <!-- Results container (hidden by default) -->
-                <div id="resultContainer" class="mt-6 hidden">
-                    <div class="flex items-center mb-1 gap-1">
-                        <h3 class="text-lg font-semibold text-gray-800">קישור הורדה ישיר:</h3>
-                        <div class="tooltip">
-                            <i class="fas fa-info-circle text-blue-500 cursor-pointer"></i>
-                            <span class="tooltip-text">קישור זה יוריד את הקובץ ישירות כאשר תלחץ עליו</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col md:flex-row gap-2">
-                        <input type="text" id="directLink" readonly class="flex-grow px-4 py-3 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-800">
-                        <button id="copyBtn" class="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition duration-300 flex items-center justify-center">
-                            <i class="far fa-copy mr-2"></i> העתק
-                        </button>
-                    </div>
-                    <!-- File metadata section -->
-                    <div id="fileMetadata" class="mt-6 bg-blue-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">מידע על הקובץ:</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">שם הקובץ:</p>
-                                <p id="fileName" class="file-info-text">-</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">סוג הקובץ:</p>
-                                <p id="fileType" class="file-info-text">-</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">גודל הקובץ:</p>
-                                <p id="fileSize" class="file-info-text">-</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">שונה לאחרונה:</p>
-                                <p id="fileModified" class="file-info-text">-</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <a id="downloadBtn" href="#" target="_blank" class="inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-300">
-                            <i class="fas fa-download ml-2"></i> הורד עכשיו
-                        </a>
-                    </div>
-                </div>
-                <!-- Error container (hidden by default) -->
-                <div id="errorContainer" class="mt-4 hidden">
-                    <div class="bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded">
-                        <div class="flex items-center">
-                            <i class="fas fa-exclamation-circle ml-2"></i>
-                            <p id="errorMessage" class="font-medium"></p>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- End of card -->
+<body class="min-h-screen flex flex-col">
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 opacity-80" aria-hidden="true">
+            <div class="absolute -top-36 -left-24 h-72 w-72 bg-gradient-to-br from-blue-400 via-sky-300 to-cyan-200 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-32 h-96 w-96 bg-gradient-to-br from-sky-400 via-blue-300 to-indigo-300 rounded-full blur-[120px]"></div>
         </div>
-    </div>
+        <div class="relative max-w-6xl mx-auto px-6 py-16 text-slate-900">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <span class="inline-flex items-center gap-2 badge px-4 py-1 rounded-full text-sm font-medium text-slate-700 shadow-sm">
+                        <i class="fas fa-check-circle text-emerald-500"></i>
+                        קישור הורדה מוכן תוך שניות
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
+                        ממיר קישורי Google Drive לקישור הורדה מקצועי
+                    </h1>
+                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed max-w-xl">
+                        הדביקו קישור שיתוף וקבלו כתובת הורדה נקייה ומבוססת API, עם כל המידע החשוב על הקובץ. אידיאלי לשליחה ללקוחות, שילוב במערכות או שמירה אישית.
+                    </p>
+                    <div class="flex flex-wrap gap-3 text-sm text-slate-600">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-slate-200 shadow-sm">
+                            <i class="fas fa-shield-alt text-blue-500"></i>
+                            גישה מאובטחת ללא תוספים
+                        </div>
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-slate-200 shadow-sm">
+                            <i class="fas fa-bolt text-sky-500"></i>
+                            מוכן לשיתוף מיידי
+                        </div>
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-slate-200 shadow-sm">
+                            <i class="fas fa-layer-group text-indigo-500"></i>
+                            תומך בכל סוגי הקבצים
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-card p-8 md:p-10 space-y-6">
+                    <h2 class="text-2xl font-semibold text-slate-900">איך מקבלים קישור נכון?</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        חיסכנו לכם ניסוי וטעייה: כך תבטיחו שקישור ה-Drive שלכם עובד בכל מקום.
+                    </p>
+                    <div class="soft-divider"></div>
+                    <ul class="space-y-4 text-slate-600 text-base">
+                        <li class="flex items-start gap-3">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-semibold">1</span>
+                            <span>לחצו ב-Google Drive על "שיתוף" ובחרו "כל מי שיש לו את הקישור".</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-600 font-semibold">2</span>
+                            <span>העתיקו את הקישור המלא והדביקו אותו כאן בטופס ההמרה.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-600 font-semibold">3</span>
+                            <span>הורידו, העתיקו או שתפו את הקישור החדש שנוצר – הוא מוכן לשימוש מיידי.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <div class="max-w-6xl mx-auto px-6 pb-16">
+            <section class="glass-card accent-border rounded-3xl p-8 md:p-10">
+                <h2 class="text-2xl md:text-3xl font-semibold text-slate-900 mb-6 flex items-center gap-3">
+                    <i class="fab fa-google-drive text-emerald-500 text-3xl"></i>
+                    התחילו המרה
+                </h2>
+                <p class="text-slate-600 mb-8 leading-relaxed">
+                    הכניסו קישור שיתוף מלא כפי שקיבלתם מ-Google Drive. אנחנו נבדוק את הקישור, נמיר אותו ונביא לכם כתובת הורדה שמאפשרת שמירה ישירה של הקובץ.
+                </p>
+                <div class="bg-white/70 rounded-2xl p-4 md:p-6 shadow-inner">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-grow">
+                            <label for="driveLink" class="block text-sm font-medium text-slate-600 mb-2">קישור Google Drive</label>
+                            <input type="text" id="driveLink" placeholder="https://drive.google.com/file/d/12345/view?usp=sharing" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200/60 transition text-slate-800 bg-white">
+                            <p class="mt-2 text-xs text-slate-400">הדביקו כאן את כתובת השיתוף בדיוק כפי שקיבלתם אותה.</p>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="convertBtn" class="group h-[58px] w-full md:w-auto px-6 bg-gradient-to-l from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-semibold rounded-xl transition-transform duration-300 flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5">
+                                <span class="relative inline-flex items-center gap-2">
+                                    <i class="fas fa-bolt text-lg"></i>
+                                    המר עכשיו
+                                    <span class="absolute inset-0 rounded-lg bg-white/30 blur-sm opacity-0 group-hover:opacity-100" style="pointer-events:none"></span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-500 leading-6">
+                        הקישו על "המר עכשיו" כדי לקבל קישור הורדה ישיר שמפעיל הורדה מיידית מכל דפדפן או אפליקציה. אין צורך בהרשאות מיוחדות – הקישור החדש פשוט עובד.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+                    <div class="bg-white/75 rounded-2xl p-6 shadow-inner">
+                        <h3 class="text-xl font-semibold text-slate-900 mb-4">למי זה מתאים?</h3>
+                        <ul class="space-y-4 text-slate-600 text-base">
+                            <li class="flex items-start gap-3">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <span>מנהלי פרויקטים ופרילנסרים שמעבירים קבצים כבדים ללקוחות ורוצים חוויה נקייה ומקצועית.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <span>מפתחים שמחברים את Google Drive לאוטומציה, Webhooks או טפסים וצריכים קישור הורדה אמין.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-600">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <span>מדריכים, מוסדות חינוך וארגונים שרוצים להפיץ חומרי למידה ללא תלות בהרשאות חשבון.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/75 rounded-2xl p-6 shadow-inner">
+                        <h3 class="text-xl font-semibold text-slate-900 mb-4">טיפים חשובים</h3>
+                        <ul class="space-y-3 text-slate-600 text-base">
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-lock-open text-emerald-500 mt-1"></i>
+                                ודאו שלקובץ מוגדר מצב שיתוף "כל מי שיש לו את הקישור" כדי שההורדה תפעל.
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-download text-blue-500 mt-1"></i>
+                                ניתן להשתמש בקישור הישיר לאוטומציה, הטמעה באתר, שליחה ב-WhatsApp או שילוב בפורטלים.
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-circle-info text-sky-500 mt-1"></i>
+                                פרטי הקובץ (שם, סוג, גודל ותאריך עדכון) מוצגים לאחר ההמרה כדי שתדעו בדיוק מה אתם משתפים.
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-shield-check text-indigo-500 mt-1"></i>
+                                אנו משתמשים ב-Google Drive API הרשמי בלבד, ללא גישה לתוכן הקובץ או אחסון חיצוני.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="resultContainer" class="mt-12 hidden">
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-20" aria-hidden="true">
+                            <div class="absolute w-40 h-40 bg-gradient-to-br from-emerald-400/60 to-sky-500/40 rounded-full blur-3xl -top-10 right-0"></div>
+                            <div class="absolute w-56 h-56 bg-gradient-to-tr from-blue-500/60 to-indigo-500/40 rounded-full blur-3xl -bottom-20 left-6"></div>
+                        </div>
+                        <div class="relative">
+                            <div class="flex flex-wrap items-center gap-3 mb-4">
+                                <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium">
+                                    <i class="fas fa-link"></i>
+                                    קישור ישיר מוכן
+                                </span>
+                                <span class="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-medium">
+                                    <i class="fas fa-clock"></i>
+                                    תקף כל עוד הקישור המקורי פעיל
+                                </span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-semibold mb-3">קישור הורדה ישיר</h3>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <input type="text" id="directLink" readonly class="flex-grow px-4 py-3 rounded-xl border border-white/20 bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-300/70 selection:bg-white selection:text-slate-900">
+                                <div class="flex gap-3">
+                                    <button id="copyBtn" class="px-5 py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold transition flex items-center justify-center">
+                                        <span class="inline-flex items-center gap-2">
+                                            <i class="far fa-copy"></i>
+                                            העתק קישור
+                                        </span>
+                                    </button>
+                                    <a id="downloadBtn" href="#" target="_blank" rel="noopener" class="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition flex items-center justify-center">
+                                        <span class="inline-flex items-center gap-2">
+                                            <i class="fas fa-arrow-down"></i>
+                                            הורד עכשיו
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fileMetadata" class="mt-8 bg-white/80 rounded-2xl p-6 shadow-inner">
+                        <div class="flex items-center justify-between flex-wrap gap-3">
+                            <h4 class="text-lg font-semibold text-slate-900">פרטי הקובץ שהומר</h4>
+                            <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                                <i class="fas fa-circle-info text-blue-500"></i>
+                                הנתונים מוצגים כפי שהם ב-Google Drive
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                            <div class="flex items-start gap-4">
+                                <div class="h-11 w-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-500">שם הקובץ</p>
+                                    <p id="fileName" class="text-lg font-semibold text-slate-800 break-words">-</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="h-11 w-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                                    <i class="fas fa-tags"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-500">סוג הקובץ</p>
+                                    <p id="fileType" class="text-lg font-semibold text-slate-800 break-words">-</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="h-11 w-11 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                    <i class="fas fa-weight-hanging"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-500">גודל הקובץ</p>
+                                    <p id="fileSize" class="text-lg font-semibold text-slate-800 break-words">-</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="h-11 w-11 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-500">שונה לאחרונה</p>
+                                    <p id="fileModified" class="text-lg font-semibold text-slate-800 break-words">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="errorContainer" class="mt-8 hidden">
+                    <div class="rounded-2xl border border-red-200 bg-red-50/80 px-6 py-4 flex items-start gap-3 text-red-700 shadow-inner" role="alert" aria-live="assertive">
+                        <i class="fas fa-circle-exclamation text-xl mt-1"></i>
+                        <p id="errorMessage" class="text-base font-medium leading-relaxed"></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
     <script>
     // Main logic for converting Drive links to direct download links
     document.addEventListener('DOMContentLoaded', function() {
@@ -171,8 +316,8 @@
         const fileType = document.getElementById('fileType');
         const fileSize = document.getElementById('fileSize');
         const fileModified = document.getElementById('fileModified');
-        // Pulse the convert button for a friendly animation
-        convertBtn.classList.add('pulse');
+        const originalBtnContent = convertBtn.innerHTML;
+
         // Click handler for converting a link
         convertBtn.addEventListener('click', async function() {
             const link = driveLink.value.trim();
@@ -188,8 +333,8 @@
                 return;
             }
             // Update button state to show loading spinner
-            const originalBtnText = convertBtn.innerHTML;
-            convertBtn.innerHTML = '<div class="loading mr-2"></div> מתבצעת המרה...';
+            convertBtn.innerHTML = '<span class="inline-flex items-center gap-2 text-base"><span class="inline-block h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"></span>מתבצעת המרה...</span>';
+            convertBtn.classList.add('opacity-80', 'cursor-wait');
             convertBtn.disabled = true;
             try {
                 const fileId = extractFileId(link);
@@ -213,19 +358,34 @@
             } catch (error) {
                 showError('שגיאה בהמרת הקישור: ' + error.message);
             } finally {
-                convertBtn.innerHTML = originalBtnText;
+                convertBtn.innerHTML = originalBtnContent;
+                convertBtn.classList.remove('opacity-80', 'cursor-wait');
                 convertBtn.disabled = false;
             }
         });
         // Copy direct link to clipboard
-        copyBtn.addEventListener('click', function() {
-            directLink.select();
-            document.execCommand('copy');
+        copyBtn.addEventListener('click', async function() {
+            if (!directLink.value) {
+                showError('אין קישור שניתן להעתיק עדיין. בצעו המרה תחילה.');
+                return;
+            }
             const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<i class="fas fa-check ml-2"></i> הועתק!';
-            setTimeout(function() {
-                copyBtn.innerHTML = originalText;
-            }, 2000);
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(directLink.value);
+                } else {
+                    directLink.select();
+                    document.execCommand('copy');
+                }
+                copyBtn.innerHTML = '<span class="inline-flex items-center gap-2"><i class="fas fa-check"></i><span>הועתק!</span></span>';
+            } catch (err) {
+                console.error('Copy failed', err);
+                showError('לא הצלחנו להעתיק אוטומטית. תוכלו להעתיק ידנית את הטקסט מהשדה.');
+            } finally {
+                setTimeout(function() {
+                    copyBtn.innerHTML = originalText;
+                }, 2200);
+            }
         });
         // Display an error message
         function showError(message) {
@@ -289,7 +449,7 @@
                 'text/plain': 'קובץ טקסט',
                 'application/zip': 'ארכיון ZIP'
             };
-            return typeMap[mimeType] || mimeType.split('/') .pop().toUpperCase();
+            return typeMap[mimeType] || mimeType.split('/').pop().toUpperCase();
         }
         // Format bytes to a human-readable string
         function formatBytes(bytes, decimals = 2) {
@@ -307,7 +467,7 @@
     });
     </script>
     <!-- Attribution footer -->
-    <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px; position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
+    <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px; position: fixed; right: 8px; bottom: 8px; z-index: 10; background: rgba(15, 23, 42, 0.85); padding: 4px 8px;">
         Made with
         <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle; display:inline-block; margin-right:3px; filter:brightness(0) invert(1);">
         <a href="https://enzostvs-deepsite.hf.space" style="color: #fff; text-decoration: underline;" target="_blank">DeepSite</a>
